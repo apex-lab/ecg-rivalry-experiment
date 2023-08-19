@@ -62,8 +62,6 @@ class ProcessECG(lg.Graph):
     def logging(self) -> Dict[str, lg.Topic]:
         return {
             'ecg_raw': self.GENERATOR.OUTPUT,
-            'ecg_filt': self.FILTER.OUTPUT,
-            't_since_qrs': self.DETECTOR.OUTPUT,
             'stim_size': self.CONTROLLER.OUTPUT,
             'experiment_events': self.DISPLAY.EXPERIMENT_EVENTS,
             }

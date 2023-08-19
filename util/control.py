@@ -55,4 +55,4 @@ class Control(lg.Node):
         async_lag = self.state.last_ibi - self.config.systole_lag
         sz_async = self.size_func(time_since_rpeak, async_lag)
 
-        yield self.OUTPUT, DisplayMessage(timestamp = t, red = sz_sync, blue = sz_async)
+        yield self.OUTPUT, DisplayMessage(timestamp = t, sz_sync = sz_sync, sz_async = sz_async)

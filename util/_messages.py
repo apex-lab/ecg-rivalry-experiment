@@ -1,6 +1,7 @@
 import numpy as np
 import labgraph as lg
 
+
 class SampleMessage(lg.TimestampedMessage):
     '''
     Raw data samples should be communicated in this
@@ -28,8 +29,14 @@ class FloatMessage(lg.TimestampedMessage):
 
 class DisplayMessage(lg.TimestampedMessage):
     '''
-    Values in [0., 1.] to control the size of the rivalry stimuli 
+    Values in [0., 1.] to control the size of the rivalry stimuli
     '''
     # timestamp: float
-    red: float
-    blue: float
+    sz_sync: float
+    sz_async: float
+
+class ExperimentEventMessage(lg.TimestampedMessage):
+    # timestamp: float
+    key: str
+    key_t: float
+    sync_color: str

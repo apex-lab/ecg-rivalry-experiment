@@ -5,7 +5,9 @@ from psychopy.visual.filters import makeGrating
 def make_gratings(win,
     red_cycles = 10, red_phase = 0.,
     blue_cycles = 3, blue_phase = 0.,
-    grating_res = 256):
+    grating_res = 256,
+    pos = (0, 0)
+    ):
 
     red_grating = makeGrating(
         res = grating_res,

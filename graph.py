@@ -64,7 +64,8 @@ class ProcessECG(lg.Graph):
             'ecg_raw': self.GENERATOR.OUTPUT,
             'ecg_filt': self.FILTER.OUTPUT,
             't_since_qrs': self.DETECTOR.OUTPUT,
-            'stim_size': self.CONTROLLER.OUTPUT
+            'stim_size': self.CONTROLLER.OUTPUT,
+            'experiment_events': self.DISPLAY.EXPERIMENT_EVENTS,
             }
 
 # Entry point: run the Demo graph

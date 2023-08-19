@@ -42,7 +42,7 @@ class ProcessECG(lg.Graph):
         )
         self.CONTROLLER.configure(
             ControlConfig(
-                sfreq = SFREQ
+                systole_lag = .210
             )
         )
 

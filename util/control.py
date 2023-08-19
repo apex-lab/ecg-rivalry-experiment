@@ -10,12 +10,12 @@ import labgraph as lg
 
 class ControlState(lg.State):
     # data buffer
-    buffer: Deque[float] = None
+    ibis: Deque[float] = deque([0.], maxlen = 10)
+    last_t_since: float = 0.
 
 class ControlConfig(lg.Config):
-    sfreq: float = 100
-    delay1: float = .210 # seconds, meant to be syncronous with systole
-    delay2: float = .600 # meant to come after systole
+    systole_lag: float = .210 # seconds after R-peak to define as systole
+    diastole_prop: float = .7 # proportion of avg IBI to apply lagged stim
     scale: float = 0.25/4 # roughly 4x intended stimulus duration
 
 class Control(lg.Node):
@@ -28,17 +28,11 @@ class Control(lg.Node):
     state: ControlState
     config: ControlConfig
 
-    def setup(self) -> None:
-        lag = self.config.delay2 - self.config.delay1
-        lag *= self.config.sfreq
-        lag = int(lag)
-        self.state.buffer = deque([0.] * lag, maxlen = lag)
-
-    def size_func(self, t):
+    def size_func(self, t, phase):
         '''
         determines stimulus size as a function of time since R-peak
         '''
-        m = self.config.delay1
+        m = phase # in ms relative to R-peak
         w = self.config.scale
         sz = norm.pdf(t, loc = m, scale = w) / norm.pdf(m, loc = m, scale = w)
         return sz
@@ -52,7 +46,13 @@ class Control(lg.Node):
         '''
         t = message.timestamp
         time_since_rpeak = message.data
-        sz = self.size_func(time_since_rpeak)
-        self.state.buffer.append(sz)
-        lag_sz = self.state.buffer[0]
-        yield self.OUTPUT, DisplayMessage(timestamp = t, red = sz, blue = lag_sz)
+        if time_since_rpeak == 0.:
+            self.state.ibis.append(self.state.last_t_since)
+        self.state.last_t_since = time_since_rpeak
+
+        # compute sizes of syncronous and asyncronous stimulus
+        sz_sync = self.size_func(time_since_rpeak, self.config.systole_lag)
+        async_lag = self.config.diastole_prop * np.mean(self.state.ibis)
+        sz_async = self.size_func(time_since_rpeak, async_lag)
+
+        yield self.OUTPUT, DisplayMessage(timestamp = t, red = sz_sync, blue = sz_async)

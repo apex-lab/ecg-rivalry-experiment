@@ -10,8 +10,8 @@ import labgraph as lg
 
 class ControlState(lg.State):
     # data buffer
-    ibis: Deque[float] = deque([0.], maxlen = 10)
     last_t_since: float = 0.
+    last_ibi: float = 0.
 
 class ControlConfig(lg.Config):
     systole_lag: float = .210 # seconds after R-peak to define as systole
@@ -47,12 +47,12 @@ class Control(lg.Node):
         t = message.timestamp
         time_since_rpeak = message.data
         if time_since_rpeak == 0.:
-            self.state.ibis.append(self.state.last_t_since)
+            self.state.last_ibi = self.state.last_t_since
         self.state.last_t_since = time_since_rpeak
 
         # compute sizes of syncronous and asyncronous stimulus
         sz_sync = self.size_func(time_since_rpeak, self.config.systole_lag)
-        async_lag = self.config.diastole_prop * np.mean(self.state.ibis)
+        async_lag = self.state.last_ibi - self.config.systole_lag
         sz_async = self.size_func(time_since_rpeak, async_lag)
 
         yield self.OUTPUT, DisplayMessage(timestamp = t, red = sz_sync, blue = sz_async)

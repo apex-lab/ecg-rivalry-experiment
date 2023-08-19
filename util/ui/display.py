@@ -99,13 +99,13 @@ class Display(lg.Node):
         - Note that frame flips are inherently throttled by screen refresh rates, so
           this is not a tight loop and does not need to manually sleep between flips.
 
-        You can toggle self.state.autoDraw to control whether the rvialry stimuli
+        You can toggle self.state.autoDraw to control whether the rival stimuli
         draw on each flip. This is handy if you want to do some normal psychopy
         stuff (e.g. participant instructions) before/after beginning the main
         loop, during which everything is event-driven.
         """
         win = visual.Window(
-            size = [400, 400],
+            size = [1000, 1000],
             fullscr = False,
             units = "pix",
             winType = 'pyglet'

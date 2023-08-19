@@ -3,7 +3,8 @@ from itertools import product
 from typing import List, Tuple
 import numpy as np
 import asyncio
-import time
+import time 
+from pylsl import local_clock
 
 from psychopy import monitors, visual, core
 from ._gratings import make_gratings
@@ -111,7 +112,7 @@ class Display(lg.Node):
             if self.state.ev_list:
                 ev_name = self.state.ev_list.pop(0)
                 yield self.EXPERIMENT_EVENTS, ExperimentEventMessage(
-                                            timestamp = time.time(),
+                                            timestamp = local_clock(),
                                             key = ev_name,
                                             key_t = float(core.getAbsTime()),
                                             sync_color = self.state.sync_color
@@ -127,7 +128,7 @@ class Display(lg.Node):
                 key_pressed = []
             if key_pressed:
                 yield self.EXPERIMENT_EVENTS, ExperimentEventMessage(
-                                            timestamp = time.time(),
+                                            timestamp = local_clock(),
                                             key = key_pressed[0].name,
                                             key_t = key_pressed[0].tDown,
                                             sync_color = self.state.sync_color

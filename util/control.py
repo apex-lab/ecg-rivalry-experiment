@@ -52,7 +52,7 @@ class Control(lg.Node):
 
         # compute sizes of syncronous and asyncronous stimulus
         sz_sync = self.size_func(time_since_rpeak, self.config.systole_lag)
-        async_lag = self.state.last_ibi - self.config.systole_lag
+        async_lag = self.config.systole_lag + (self.state.last_ibi / 2)
         sz_async = self.size_func(time_since_rpeak, async_lag)
 
         yield self.OUTPUT, DisplayMessage(timestamp = t, sz_sync = sz_sync, sz_async = sz_async)

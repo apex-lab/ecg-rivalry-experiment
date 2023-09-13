@@ -2,6 +2,7 @@ from typing import Tuple
 from time import strftime
 from typing import Dict
 
+from util.lsl import LSLPollerNode, LSLPollerConfig
 from util.ecg import ECGSimulator, ECGConfig
 from util.bandpass import BandPass, BandPassConfig
 from util.qrs import QRSDetector, QRSDetectorConfig
@@ -9,12 +10,20 @@ from util.control import Control, ControlConfig
 from util.ui.display import Display
 import labgraph as lg
 
+SIMULATE = True
 SFREQ = 100.
 ECG_CHANNEL = 0
 
-class ProcessECG(lg.Graph):
+if SIMULATE:
+    ECGNode = ECGSimulator
+    ECGConfig = ECGConfig
+else:
+    ECGNode = LSLPollerNode
+    ECGConfig = LSLPollerConfig
 
-    GENERATOR: ECGSimulator
+class Experiment(lg.Graph):
+
+    GENERATOR: ECGNode
     FILTER: BandPass
     DETECTOR: QRSDetector
     CONTROLLER: Control
@@ -68,7 +77,7 @@ class ProcessECG(lg.Graph):
 
 # Entry point: run the Demo graph
 if __name__ == "__main__":
-    graph = ProcessECG()
+    graph = Experiment()
     options = lg.RunnerOptions(
         logger_config = lg.LoggerConfig(
             output_directory = "./logs",

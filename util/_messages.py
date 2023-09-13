@@ -39,4 +39,4 @@ class ExperimentEventMessage(lg.TimestampedMessage):
     # timestamp: float
     key: str
     key_t: float
-    sync_color: str
+    sync_side: str

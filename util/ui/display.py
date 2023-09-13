@@ -3,7 +3,7 @@ from itertools import product
 from typing import List, Tuple
 import numpy as np
 import asyncio
-import time 
+import time
 from pylsl import local_clock
 
 from psychopy import monitors, visual, core
@@ -15,10 +15,11 @@ from .._messages import DisplayMessage, ExperimentEventMessage
 import labgraph as lg
 
 class DisplayState(lg.State):
-    sync_color: str = ''
-    red_step: int = 0
-    blue_step: int = 0
-    autoDraw: bool = True
+    sync_side: str = ''
+    left_step: int = 0
+    right_step: int = 0
+    autoDraw_rivalry: bool = False
+    autoDraw_disc: bool = False
     key_list: List[str] = field(default_factory = list)
     ev_list: List[str] = field(default_factory = list)
 
@@ -26,7 +27,9 @@ class DisplayConfig(lg.Config):
     # controls granularity of stimuli
     n_steps: int = 10
     duration: float = 30. # seconds
-    kb_name: str = 'Dell Dell USB Entry Keyboard'
+    trials: int = 5
+    trial_dur: float = 10.
+    kb_name: str = 'Dell Dell USB Keyboard'
 
 class Display(lg.Node):
     """
@@ -43,13 +46,14 @@ class Display(lg.Node):
         self._stims = None
         self._shutdown = False
         self._fixation = None
-        self.state.sync_color = np.random.choice(['red', 'blue'])
+        self.state.sync_side = np.random.choice(['left', 'right'])
         self.kb = get_keyboard(self.config.kb_name)
 
     def cleanup(self) -> None:
         """
-        This function is called when a NormalTermination is raised, so we set relevant
-        shutdown flags here. We can use this to break out of infinite loops.
+        This function is called when a NormalTermination is raised, so we set
+        relevant shutdown flags here. We can use this to break out of infinite
+        loops.
         """
         self._shutdown = True
 
@@ -57,17 +61,47 @@ class Display(lg.Node):
         """
         Pre-generate rivalry stimuli, since making the custom gratings is slow.
 
-        This cannot be done in the `setup` function because the window needs to be
-        available, and psychopy needs the window to be created in the "main" thread.
+        This cannot be done in the `setup` function because the window needs to
+        be available, and psychopy needs the window to be created in the
+        "main" thread.
         """
-        self._fixation = visual.TextStim(win, text = '+', color = "white", pos = (0, 0))
+        self._fixation = visual.TextStim(
+            win, text = '+', color = "white", pos = (0, 0)
+            )
         n_steps = self.config.n_steps
-        steps = np.linspace(10, 5, n_steps)
+
+        # draw gratings for each step size
         self._stims = np.empty((n_steps, n_steps), dtype = object)
+        steps = np.linspace(10, 5, n_steps)
         for i, j in product(range(n_steps), range(n_steps)):
             self._stims[i,j] = make_gratings(
                 win, red_cycles = steps[i], blue_cycles = steps[j]
             )
+
+        # draw circles on each side of screen for each step size
+        quarter_width = win.size[0]//4
+        left_pos = (0 - 2*quarter_width//3, 0)
+        right_pos = (0 + 2*quarter_width//3, 0)
+        min_radius = quarter_width//8
+        max_radius = quarter_width//4
+        steps = np.linspace(min_radius, max_radius, n_steps)
+        self._left_circle = np.empty(n_steps, dtype = object)
+        self._right_circle = np.empty(n_steps, dtype = object)
+        for i, radius in enumerate(steps):
+            self._left_circle[i] = visual.Circle(
+                win,
+                radius = radius,
+                pos = left_pos,
+                fillColor = 'black'
+                )
+            self._right_circle[i] = visual.Circle(
+                win,
+                radius = radius,
+                pos = right_pos,
+                fillColor = 'black'
+                )
+
+
 
     def _val_to_steps(self, val: float):
         n_steps = self.config.n_steps
@@ -82,24 +116,32 @@ class Display(lg.Node):
         This function subscribes to the specified topic that receives the "next"
         stimulus state and updates the `autoDraw` status of pre-made stims.
         """
-        if self.state.sync_color == 'red':
-            red_step = self._val_to_steps(message.sz_sync)
-            blue_step = self._val_to_steps(message.sz_async)
+        if self.state.sync_side == 'left': # red is on the left eye
+            left_step = self._val_to_steps(message.sz_sync)
+            right_step = self._val_to_steps(message.sz_async)
         else:
-            red_step = self._val_to_steps(message.sz_async)
-            blue_step = self._val_to_steps(message.sz_sync)
-        # turn off autodraw for old stim
-        try:
-            self._stims[self.state.red_step, self.state.blue_step].autoDraw = False
+            left_step = self._val_to_steps(message.sz_async)
+            right_step = self._val_to_steps(message.sz_sync)
+        try: # turn off autodraw for old stim
+            self._stims[self.state.left_step, self.state.right_step].autoDraw = False
             self._fixation.autoDraw = False
-        except:
+            self._left_circle[self.state.left_step].autoDraw = False
+            self._right_circle[self.state.right_step].autoDraw = False
+        except: # _setup_stims hasn't run yet
             None
         # and turn it on for new stim
-        self.state.red_step = red_step
-        self.state.blue_step = blue_step
+        self.state.left_step = left_step
+        self.state.right_step = right_step
         try:
-            self._stims[self.state.red_step, self.state.blue_step].autoDraw = self.state.autoDraw
-            self._fixation.autoDraw = self.state.autoDraw
+            # if currently doing rivalry task, autodraw rivalry gratings
+            self._stims[self.state.left_step, self.state.right_step].autoDraw = \
+                                                    self.state.autoDraw_rivalry
+            self._fixation.autoDraw = self.state.autoDraw_rivalry
+            # but if doing the discrimination task, autodraw circle stim
+            self._left_circle[self.state.left_step].autoDraw = \
+                                                self.state.autoDraw_disc
+            self._right_circle[self.state.right_step].autoDraw = \
+                                                self.state.autoDraw_disc
         except: # this is just for right at startup when some of these
             None # state vars don't exist yet
 
@@ -115,7 +157,7 @@ class Display(lg.Node):
                                             timestamp = local_clock(),
                                             key = ev_name,
                                             key_t = float(core.getAbsTime()),
-                                            sync_color = self.state.sync_color
+                                            sync_side = self.state.sync_side
                                             )
             # handle user input events
             if self.state.key_list:
@@ -131,7 +173,7 @@ class Display(lg.Node):
                                             timestamp = local_clock(),
                                             key = key_pressed[0].name,
                                             key_t = key_pressed[0].tDown,
-                                            sync_color = self.state.sync_color
+                                            sync_side = self.state.sync_side
                                             )
             await asyncio.sleep(.05)
 
@@ -152,10 +194,11 @@ class Display(lg.Node):
         loop, during which everything is event-driven.
         """
         win = visual.Window( # must be started here in main thread
-            size = [1000, 1000],
+            size = [1920, 1080],
             fullscr = False,
+            allowGUI = False,
+            screen = -1,
             units = 'pix',
-            winType = 'pyglet'
         )
 
         # orient the subject
@@ -166,14 +209,38 @@ class Display(lg.Node):
         timeout = False
         clock = core.Clock()
         self.state.key_list = ['left', 'right']
-        self.state.ev_list.append('start')
+        self.state.ev_list.append('start_rivalry')
+        self.state.autoDraw_rivalry = True
         clock.reset(0.)
-        while (not self._shutdown) and (not timeout):
+        while not timeout:
             self._fixation.draw()
             win.flip()
             timeout = clock.getTime() > self.config.duration
-        self.state.ev_list.append('end')
-        while self.state.ev_list: # flush event list before closing
-            time.sleep(.1)  # so that all events are marked in log
+        self.state.key_list = [] # stop listening for keys in event loop
+        self.state.ev_list.append('end_rivalry')
+        self.state.autoDraw_rivalry = False
+        core.wait(.05)
+
+        # introduce heartbeat discrimination task
+        #show_midpoint_instructions(win, self.kb)
+
+        for trial in range(1, self.config.trials + 1):
+            self._fixation.draw()
+            win.flip()
+            core.wait(1.)
+            self.state.autoDraw_disc = True
+            self.state.sync_side = np.random.choice(['left', 'right'])
+            self.state.ev_list.append('start_trial%d'%trial)
+            clock.reset()
+            while not (clock.getTime() > self.config.trial_dur):
+                win.flip()
+            self.state.ev_list.append('end_trial%d'%trial)
+            self.state.autoDraw_disc = False
+            core.wait(.05)
+            #resp = get_2AFC(win, self.kb) # ask which side was syncronous
+            #self.state.ev_list.append('resp_%s'%resp) # and record response
+
+
+        #show_closing_instructions(win)
         win.close()
         raise lg.NormalTermination()

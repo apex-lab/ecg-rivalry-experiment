@@ -30,6 +30,11 @@ class ECGSimulator(lg.Node):
             sampling_rate = int(self.config.sfreq),
             heart_rate = int(self.config.heart_rate)
             )
+        self._shutdown = False
+
+    def cleanup(self) -> None:
+        #self._shutdown = True
+        return
 
     def get_ecg(self, idx):
         i = idx % (self.state.ecg.shape[0] - 1)
@@ -38,7 +43,7 @@ class ECGSimulator(lg.Node):
     @lg.publisher(OUTPUT)
     async def simulate(self) -> lg.AsyncPublisher:
         rate = Rate(self.config.sfreq)
-        while True:
+        while not self._shutdown:
             self.state.idx += 1
             ecg = self.get_ecg(self.state.idx)
             t = local_clock()

@@ -110,3 +110,14 @@ def show_closing_instructions(win, kb):
     Please let the experimenter know you're done.
     '''
     _show_instructions(win, kb, msg)
+
+def get_2AFC(win, kb):
+    msg = '''
+    Which circle was synchronized to your heartbeat?
+
+    Press the left arrow key for "left" and right arrow for "right."
+    '''
+    _display_text(win, msg)
+    keys = kb.waitKeys(keyList = ['left', 'right'], clear = True)
+    resp = keys[0].name
+    return resp

@@ -11,7 +11,8 @@ from ._gratings import make_gratings
 from ._instructions import (
     show_opening_instructions,
     show_midpoint_instructions,
-    show_closing_instructions
+    show_closing_instructions,
+    get_2AFC
 )
 from ._input import get_keyboard
 
@@ -30,7 +31,7 @@ class DisplayState(lg.State):
 class DisplayConfig(lg.Config):
     # controls granularity of stimuli
     n_steps: int = 10
-    duration: float = 30. # seconds
+    duration: float = 10. # seconds
     trials: int = 5
     trial_dur: float = 10.
     kb_name: str = 'Dell Dell USB Keyboard'
@@ -241,8 +242,8 @@ class Display(lg.Node):
             self.state.ev_list.append('end_trial%d'%trial)
             self.state.autoDraw_disc = False
             core.wait(.05)
-            #resp = get_2AFC(win, self.kb) # ask which side was syncronous
-            #self.state.ev_list.append('resp_%s'%resp) # and record response
+            resp = get_2AFC(win, self.kb) # ask which side was syncronous
+            self.state.ev_list.append('resp_%s'%resp) # and record response
 
 
         show_closing_instructions(win, self.kb)

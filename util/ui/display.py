@@ -8,7 +8,10 @@ from pylsl import local_clock
 
 from psychopy import monitors, visual, core
 from ._gratings import make_gratings
-from ._instructions import show_opening_instructions
+from ._instructions import (
+    show_opening_instructions,
+    show_midpoint_instructions
+)
 from ._input import get_keyboard
 
 from .._messages import DisplayMessage, ExperimentEventMessage
@@ -222,7 +225,7 @@ class Display(lg.Node):
         core.wait(.05)
 
         # introduce heartbeat discrimination task
-        #show_midpoint_instructions(win, self.kb)
+        show_midpoint_instructions(win, self.kb)
 
         for trial in range(1, self.config.trials + 1):
             self._fixation.draw()

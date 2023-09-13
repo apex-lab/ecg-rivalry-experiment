@@ -4,7 +4,8 @@ def _display_text(win, txt):
     msg = visual.TextStim(
         win,
         text = txt,
-        pos = (0,0)
+        pos = (0,0),
+        wrapWidth = win.size[0]
         )
     msg.draw()
     win.flip()
@@ -77,5 +78,35 @@ def show_opening_instructions(win, kb):
 def show_midpoint_instructions(win, kb):
     msg = '''
     You have completed the first task!
+    '''
+    _show_instructions(win, kb, msg)
+    msg = '''
+    On each trial of the next task, you will see two pulsating circles on the screen.
+
+    One of the circles will pulse in synchrony with your heartbeat,
+    and the other will pulse at random times.
+    '''
+    _show_instructions(win, kb, msg)
+    msg = '''
+    You will see the circles side-by-side for 10 seconds,
+    and then you'll be asked which you thought was in sync with your heart.
+    '''
+    _show_instructions(win, kb, msg)
+    msg = '''
+    Please ask the experimenter if you have any questions.
+
+    Otherwise, you may begin by pressing space.
+    '''
+    _show_instructions(win, kb, msg)
+
+def show_closing_instructions(win, kb):
+    msg = '''
+    You have completed the experiment!
+    '''
+    _show_instructions(win, kb, msg)
+    msg = '''
+    Thank you for participating.
+
+    Please let the experimenter know you're done.
     '''
     _show_instructions(win, kb, msg)

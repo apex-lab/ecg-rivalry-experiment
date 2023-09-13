@@ -10,7 +10,8 @@ from psychopy import monitors, visual, core
 from ._gratings import make_gratings
 from ._instructions import (
     show_opening_instructions,
-    show_midpoint_instructions
+    show_midpoint_instructions,
+    show_closing_instructions
 )
 from ._input import get_keyboard
 
@@ -244,6 +245,6 @@ class Display(lg.Node):
             #self.state.ev_list.append('resp_%s'%resp) # and record response
 
 
-        #show_closing_instructions(win)
+        show_closing_instructions(win, self.kb)
         win.close()
         raise lg.NormalTermination()

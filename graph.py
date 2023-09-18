@@ -10,14 +10,19 @@ from util.control import Control, ControlConfig
 from util.ui.display import Display
 import labgraph as lg
 
-SIMULATE = True
+SIMULATE = False
 SFREQ = 100.
 ECG_CHANNEL = 0
 
 if SIMULATE:
+    ecg_args = dict(sfreq = SFREQ)
     ECGNode = ECGSimulator
     ECGConfig = ECGConfig
 else:
+    ecg_args = dict(
+        sfreq = 500., # lowest rate TMSi SAGA can use
+        downsample = int(500. / SFREQ)
+    )
     ECGNode = LSLPollerNode
     ECGConfig = LSLPollerConfig
 
@@ -32,9 +37,7 @@ class Experiment(lg.Graph):
     def setup(self) -> None:
 
         self.GENERATOR.configure(
-            ECGConfig(
-                sfreq = SFREQ
-            )
+            ECGConfig(**ecg_args)
         )
         self.FILTER.configure(
             BandPassConfig(
@@ -51,7 +54,7 @@ class Experiment(lg.Graph):
         )
         self.CONTROLLER.configure(
             ControlConfig(
-                systole_lag = .210
+                systole_lag = .2
             )
         )
 
@@ -71,6 +74,8 @@ class Experiment(lg.Graph):
     def logging(self) -> Dict[str, lg.Topic]:
         return {
             'ecg_raw': self.GENERATOR.OUTPUT,
+            'ecg_filt': self.FILTER.OUTPUT,
+            't_since': self.DETECTOR.OUTPUT,
             'stim_size': self.CONTROLLER.OUTPUT,
             'experiment_events': self.DISPLAY.EXPERIMENT_EVENTS,
             }

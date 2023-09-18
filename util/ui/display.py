@@ -31,7 +31,7 @@ class DisplayState(lg.State):
 class DisplayConfig(lg.Config):
     # controls granularity of stimuli
     n_steps: int = 10
-    duration: float = 10. # seconds
+    duration: float = 30. # seconds
     trials: int = 5
     trial_dur: float = 10.
     kb_name: str = 'Dell Dell USB Keyboard'

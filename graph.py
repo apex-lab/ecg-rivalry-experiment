@@ -11,17 +11,20 @@ from util.ui.display import Display
 import labgraph as lg
 
 SIMULATE = False
-SFREQ = 100.
-ECG_CHANNEL = 0
+ECG_CHANNEL = 0     # channel of LSL stream to use as ECG
+SFREQ = 100.        # desired sampling rate 
+POLLING_RATE = 500. # lowest hardware rate of TMSi SAGA
 
 if SIMULATE:
     ecg_args = dict(sfreq = SFREQ)
     ECGNode = ECGSimulator
     ECGConfig = ECGConfig
 else:
+    downsample = POLLING_RATE / SFREQ
+    assert(int(downsample) == downsample) # can only downsample by integer
     ecg_args = dict(
-        sfreq = 500., # lowest rate TMSi SAGA can use
-        downsample = int(500. / SFREQ)
+        sfreq = POLLING_RATE,
+        downsample = int(downsample)
     )
     ECGNode = LSLPollerNode
     ECGConfig = LSLPollerConfig
@@ -82,11 +85,14 @@ class Experiment(lg.Graph):
 
 # Entry point: run the Demo graph
 if __name__ == "__main__":
+    sub_num = input('Enter subject number: ')
+    sub_num = int(sub_num)
+    sub = '%02d'%sub_num
     graph = Experiment()
     options = lg.RunnerOptions(
         logger_config = lg.LoggerConfig(
-            output_directory = "./logs",
-            recording_name = "ecg%s"%strftime("%Y%m%d-%H%M%S"),
+            output_directory = './logs', # label w/ subject number and datetime
+            recording_name = 'sub-%s_%s'%(sub, strftime('%Y%m%d-%H%M%S')),
         ),
     )
     runner = lg.ParallelRunner(graph = graph, options = options)

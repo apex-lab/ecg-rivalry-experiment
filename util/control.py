@@ -15,8 +15,7 @@ class ControlState(lg.State):
 
 class ControlConfig(lg.Config):
     systole_lag: float = .210 # seconds after R-peak to define as systole
-    diastole_prop: float = .7 # proportion of avg IBI to apply lagged stim
-    scale: float = 0.25/4 # roughly 4x intended stimulus duration
+    scale: float = 0.25/4 # roughly 1/4 intended stimulus duration
 
 class Control(lg.Node):
     '''

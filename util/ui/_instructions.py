@@ -50,8 +50,8 @@ def show_opening_instructions(win, kb):
     _show_instructions(win, kb, msg)
 
     msg = '''
-    You will view two such rival stimuli for 20 minutes. Each time the dominant
-    image switches, please let us know by pressing a button.
+    You will view two such rival images (red and blue bars) for 20 minutes.
+    Each time the dominant image switches, please let us know by pressing a button.
 
     Please press the LEFT arrow key when the RED image is newly dominant,
     and the RIGHT arrow key when the BLUE image is dominant.
@@ -75,6 +75,18 @@ def show_opening_instructions(win, kb):
     '''
     _show_instructions(win, kb, msg)
 
+def show_break_instructions(win, kb):
+    msg = '''
+    You have completed the first block.
+    There will be one more block of this task.
+    '''
+    _show_instructions(win, kb, msg)
+    msg = '''
+    You may take a brief break to rest your eyes if needed.
+    Or if you are ready, you may continue to the next block.
+    '''
+    _show_instructions(win, kb, msg)
+
 def show_midpoint_instructions(win, kb):
     msg = '''
     You have completed the first task!
@@ -90,6 +102,14 @@ def show_midpoint_instructions(win, kb):
     msg = '''
     You will see the circles side-by-side for 10 seconds,
     and then you'll be asked which you thought was in sync with your heart.
+    '''
+    _show_instructions(win, kb, msg)
+    msg = '''
+    Please do not 'cheat' by feeling your pulse with your hand.
+    Try to rely only on internal sensations.
+
+    This task if very difficult, and it is expected that you'll
+    have to guess often. Just try to do the best that you can.
     '''
     _show_instructions(win, kb, msg)
     msg = '''

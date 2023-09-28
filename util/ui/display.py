@@ -10,6 +10,7 @@ from psychopy import monitors, visual, core
 from ._gratings import make_gratings
 from ._instructions import (
     show_opening_instructions,
+    show_break_instructions,
     show_midpoint_instructions,
     show_closing_instructions,
     get_2AFC
@@ -31,8 +32,8 @@ class DisplayState(lg.State):
 class DisplayConfig(lg.Config):
     # controls granularity of stimuli
     n_steps: int = 10
-    duration: float = 30. # seconds
-    trials: int = 5
+    duration: float = 10. * 60. # seconds
+    trials: int = 120
     trial_dur: float = 10.
     kb_name: str = 'Dell Dell USB Keyboard'
 
@@ -182,8 +183,24 @@ class Display(lg.Node):
                                             )
             await asyncio.sleep(.05)
 
+    def rivalry_block(self, win, duration):
+        timeout = False
+        clock = core.Clock()
+        self.state.key_list = ['left', 'right'] # start listening for keys
+        self.state.ev_list.append('start_rivalry') # mark event time
+        self.state.autoDraw_rivalry = True
+        clock.reset(0.)
+        while not timeout:
+            self._fixation.draw()
+            win.flip()
+            timeout = clock.getTime() > duration
+        self.state.key_list = [] # stop listening for keys in event loop
+        self.state.ev_list.append('end_rivalry')
+        self.state.autoDraw_rivalry = False
+        core.wait(.05)
+
     @lg.main
-    def display(self):
+    def experiment(self):
         """
         This function runs in the main thread and sets up required psychopy objects.
 
@@ -209,26 +226,18 @@ class Display(lg.Node):
         # orient the subject
         show_opening_instructions(win, self.kb)
 
-        # start main experiment
+        ## binocular rivalry task
         self._setup_stims(win)
-        timeout = False
-        clock = core.Clock()
-        self.state.key_list = ['left', 'right']
-        self.state.ev_list.append('start_rivalry')
-        self.state.autoDraw_rivalry = True
-        clock.reset(0.)
-        while not timeout:
-            self._fixation.draw()
-            win.flip()
-            timeout = clock.getTime() > self.config.duration
-        self.state.key_list = [] # stop listening for keys in event loop
-        self.state.ev_list.append('end_rivalry')
-        self.state.autoDraw_rivalry = False
-        core.wait(.05)
+        self.rivalry_block(win, self.config.duration)
+        show_break_instructions(win, self.kb)
+        # switch which stim is synchronized for second block
+        ss = self.state.sync_side
+        self.state.sync_side = 'right' if ss == 'left' else 'left'
+        self.rivalry_block(win, self.config.duration)
 
-        # introduce heartbeat discrimination task
+        ## heartbeat discrimination task
         show_midpoint_instructions(win, self.kb)
-
+        clock = core.Clock()
         for trial in range(1, self.config.trials + 1):
             self._fixation.draw()
             win.flip()
@@ -244,7 +253,6 @@ class Display(lg.Node):
             core.wait(.05)
             resp = get_2AFC(win, self.kb) # ask which side was syncronous
             self.state.ev_list.append('resp_%s'%resp) # and record response
-
 
         show_closing_instructions(win, self.kb)
         win.close()

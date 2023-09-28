@@ -12,7 +12,7 @@ import labgraph as lg
 
 SIMULATE = False
 ECG_CHANNEL = 0     # channel of LSL stream to use as ECG
-SFREQ = 100.        # desired sampling rate 
+SFREQ = 100.        # desired sampling rate
 POLLING_RATE = 500. # lowest hardware rate of TMSi SAGA
 
 if SIMULATE:

@@ -30,9 +30,9 @@ class LSLPollerNode(lg.Node):
         count = 0
         while True:
             sample, t = self.inlet.pull_sample()
+            t += self.inlet.time_correction() # map timestamp to local clock
             if t is not None:
                 count += 1
-                t += self.inlet.time_correction() # map timestamp to local clock
                 x = np.array(sample)
                 if count % self.config.downsample == 0:
                     yield self.OUTPUT, SampleMessage(timestamp = t, data = x)

@@ -67,6 +67,18 @@ class QRSDetector(lg.Node):
     def setup(self) -> None:
         self.state.xs = deque([0], self.buffer_size)
 
+    def reset(self) -> None:
+        '''
+        In the event of catastrophic failure in which algorithm starts
+        classifying all R-peaks as noise (i.e. noise floor estimate is too
+        high), we reset all threshold parameters to their inital values
+        but keep current sample buffer.
+        '''
+        self.state.samples_since_qrs = 0
+        self.state.qrs_peak_value = .0
+        self.state.noise_peak_value = .0
+        self.state.threshold_value = .0
+
     def detect_qrs(self):
         '''
         Implements Pan-Tomkins algorithm:
@@ -118,6 +130,9 @@ class QRSDetector(lg.Node):
         self.state.threshold_value = self.state.noise_peak_value + \
                                self.config.qrs_noise_diff_weight * \
                                (self.state.qrs_peak_value - self.state.noise_peak_value)
+
+        if self.t_since_qrs > 3.: # should never happen unless subject is dead
+            self.reset()
 
 
     @lg.subscriber(INPUT)

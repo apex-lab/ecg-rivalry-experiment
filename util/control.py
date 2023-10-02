@@ -4,6 +4,7 @@ import numpy as np
 import asyncio
 
 from typing import Deque
+from pylsl import local_clock
 
 from ._messages import DisplayMessage, FloatMessage
 import labgraph as lg
@@ -54,4 +55,8 @@ class Control(lg.Node):
         async_lag = self.config.systole_lag + (self.state.last_ibi / 2)
         sz_async = self.size_func(time_since_rpeak, async_lag)
 
-        yield self.OUTPUT, DisplayMessage(timestamp = t, sz_sync = sz_sync, sz_async = sz_async)
+        yield self.OUTPUT, DisplayMessage(
+            timestamp = t,
+            sz_sync = sz_sync, sz_async = sz_async,
+            process_t = local_clock()
+            )

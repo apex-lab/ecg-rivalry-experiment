@@ -34,6 +34,7 @@ class DisplayMessage(lg.TimestampedMessage):
     # timestamp: float
     sz_sync: float
     sz_async: float
+    process_t: float
 
 class ExperimentEventMessage(lg.TimestampedMessage):
     # timestamp: float

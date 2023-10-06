@@ -57,7 +57,7 @@ class Experiment(lg.Graph):
         )
         self.CONTROLLER.configure(
             ControlConfig(
-                systole_lag = .2
+                systole_lag = .210 - .035 # minus 35 ms hardware delay
             )
         )
 

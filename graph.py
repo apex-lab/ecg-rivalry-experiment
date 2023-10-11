@@ -19,6 +19,7 @@ if SIMULATE:
     ecg_args = dict(sfreq = SFREQ)
     ECGNode = ECGSimulator
     ECGConfig = ECGConfig
+    convert = False
 else:
     downsample = POLLING_RATE / SFREQ
     assert(int(downsample) == downsample) # can only downsample by integer
@@ -28,6 +29,7 @@ else:
     )
     ECGNode = LSLPollerNode
     ECGConfig = LSLPollerConfig
+    convert = True
 
 class Experiment(lg.Graph):
 
@@ -44,10 +46,11 @@ class Experiment(lg.Graph):
         )
         self.FILTER.configure(
             BandPassConfig(
-                low_cutoff = .1,
+                low_cutoff = 5.,
                 high_cutoff = 15.,
                 sfreq = SFREQ,
-                ch_idx = ECG_CHANNEL
+                ch_idx = ECG_CHANNEL,
+                convert_microV_to_mV = convert
             )
         )
         self.DETECTOR.configure(

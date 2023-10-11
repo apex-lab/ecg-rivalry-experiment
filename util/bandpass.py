@@ -56,7 +56,7 @@ class BandPass(lg.Node):
         t = message.timestamp
         x = message.data[self.config.ch_idx] # pull out data channel
         if not np.isfinite(x):
-            x = self.state.xs[-1] # handle NaNs
+            x = self.state.xs[0] # handle NaNs
         if self.config.convert_microV_to_mV:
             x *= 1e3
         a = self.a

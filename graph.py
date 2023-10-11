@@ -29,7 +29,7 @@ else:
     )
     ECGNode = LSLPollerNode
     ECGConfig = LSLPollerConfig
-    convert = True
+    convert = True # convert units from microvolts to mV in filter node 
 
 class Experiment(lg.Graph):
 
